@@ -1,0 +1,874 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maprayés - Traductor, Tabla, Guardianes y Ayuda</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <style>
+    :root {
+      --caqui-claro: #A68A64;
+      --azul-grisaceo: #5C6F7A;
+      --verde-oliva: #6B705C;
+      --verde-oliva-hover: #5A5F50;
+      --crema-suave: #F8E9D6;
+      --gris-oscuro: #4A4A4A;
+      --verde-musgo: #6B705C;
+      --amarillo-mostaza: #D4A017;
+      --rojo-apagado: #A8332E;
+    }
+    .notificacion {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 5px;
+      color: var(--crema-suave);
+      z-index: 1000;
+      animation: fadeInOut 3s ease-in-out forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .notificacion.lino { background: linear-gradient(45deg, #ff4500, #ffa500); }
+    .notificacion.lino::before {
+      content: '';
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: #fff;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: spark 0.5s ease-out infinite;
+    }
+    @keyframes spark {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+    }
+    .notificacion.garbanza-picante { background: linear-gradient(45deg, #ff69b4, #ffb6c1); }
+    .notificacion.garbanza-picante::after {
+      content: '💖';
+      position: absolute;
+      font-size: 10px;
+      animation: floatHeart 1s ease-in-out infinite;
+    }
+    @keyframes floatHeart {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-20px); opacity: 0; }
+    }
+    .notificacion.garbanza-suave { background: linear-gradient(45deg, #ffc1cc, #ffe4e1); }
+    .notificacion.garbanza-suave::after {
+      content: '🌸';
+      position: absolute;
+      font-size: 10px;
+      animation: fallPetal 1s ease-in-out infinite;
+    }
+    @keyframes fallPetal {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(20px); opacity: 0; }
+    }
+    .notificacion.yudmiry { background: linear-gradient(45deg, #191970, #483d8b); }
+    .notificacion.yudmiry::before {
+      content: '✨';
+      position: absolute;
+      font-size: 8px;
+      animation: twinkle 0.8s ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    .notificacion.escrimedes { background: linear-gradient(45deg, #8b4513, #deb887); }
+    .notificacion.escrimedes::after {
+      content: '🖌️';
+      position: absolute;
+      font-size: 10px;
+      animation: fadeDust 1s ease-in-out infinite;
+    }
+    @keyframes fadeDust {
+      0% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(10px); }
+    }
+    .notificacion.oithar-vertigo { background: linear-gradient(45deg, #00ced1, #20b2aa); }
+    .notificacion.oithar-vertigo::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+      animation: swirl 1s ease-in-out infinite;
+    }
+    @keyframes swirl {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .notificacion.oithar-lucidez { background: linear-gradient(45deg, #4682b4, #87ceeb); }
+    .notificacion.oithar-lucidez::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+      animation: wave 1s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+      100% { transform: translateY(0); }
+    }
+    .notificacion.epheron { background: linear-gradient(45deg, #2f4f4f, #708090); }
+    .notificacion.epheron::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      animation: flicker 1s ease-in-out infinite;
+    }
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .notificacion.triczy { background: linear-gradient(45deg, #800080, #ff00ff); }
+    .notificacion.triczy::before {
+      content: '';
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: #fff;
+      border-radius: 50%;
+      animation: chaoticParticle 0.5s ease-in-out infinite;
+    }
+    @keyframes chaoticParticle {
+      0% { transform: translate(0, 0); opacity: 1; }
+      100% { transform: translate(calc(10px * var(--rand-x)), calc(10px * var(--rand-y))); opacity: 0; }
+    }
+    .estrella { cursor: pointer; font-size: 1.2rem; }
+    .estrella.favorito { color: var(--verde-oliva); }
+    #qrCanvas { max-width: 200px; margin-top: 10px; }
+    .guardian-card {
+      background-color: var(--azul-grisaceo);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .guardian-card:hover { transform: scale(1.05); }
+    .bg-caqui-claro { background-color: var(--caqui-claro); }
+    .text-crema-suave { color: var(--crema-suave); }
+    .bg-azul-grisaceo { background-color: var(--azul-grisaceo); }
+    .border-gris-oscuro { border-color: var(--gris-oscuro); }
+    .bg-verde-oliva { background-color: var(--verde-oliva); }
+    .hover\:bg-verde-oliva-hover:hover { background-color: var(--verde-oliva-hover); }
+    .bg-verde-musgo { background-color: var(--verde-musgo); }
+    .bg-amarillo-mostaza { background-color: var(--amarillo-mostaza); }
+    .bg-rojo-apagado { background-color: var(--rojo-apagado); }
+    .text-verde-musgo { color: var(--verde-musgo); }
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; border-radius: 50%; transition: 0.4s; }
+    input:checked + .slider { background-color: #6B705C; }
+    input:checked + .slider:before { transform: translateX(20px); }
+  </style>
+</head>
+<body class="bg-caqui-claro text-crema-suave min-h-screen p-6 flex flex-col">
+  <div class="container mx-auto flex-grow">
+    <div id="notificaciones"></div>
+    <div id="pantallaPrincipal" class="flex flex-col items-center space-y-4">
+      <h1 class="text-4xl font-bold mb-6">Maprayés</h1>
+      <button id="btnTraductor" class="w-3/4 max-w-md px-4 py-3 bg-verde-oliva rounded-lg hover:bg-verde-oliva-hover text-lg">Traductor</button>
+      <button id="btnTabla" class="w-3/4 max-w-md px-4 py-3 bg-verde-oliva rounded-lg hover:bg-verde-oliva-hover text-lg">Tabla de Códigos</button>
+      <button id="btnGuardianes" class="w-3/4 max-w-md px-4 py-3 bg-verde-oliva rounded-lg hover:bg-verde-oliva-hover text-lg">Guardianes</button>
+      <button id="btnAyuda" class="w-3/4 max-w-md px-4 py-3 bg-verde-oliva rounded-lg hover:bg-verde-oliva-hover text-lg">Ayuda</button>
+    </div>
+    <div id="traductor" class="hidden flex flex-col space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold">Traductor</h2>
+        <button id="regresarDesdeTraductor" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Regresar</button>
+      </div>
+      <h3 class="text-xl font-semibold">Texto a Maprayés</h3>
+      <textarea id="inputText" class="w-full p-3 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave" placeholder="Escribe tu texto aquí (incluye 😊, ❤️, etc.)"></textarea>
+      <div class="flex space-x-2">
+        <button id="intercambiarTextBtn" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Intercambiar</button>
+        <button id="limpiarTextBtn" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Limpiar</button>
+      </div>
+      <textarea id="maprayesOutput" class="w-full p-3 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave" placeholder="Resultado en Maprayés..."></textarea>
+      <div id="mythicSection" class="hidden flex-col space-y-4">
+        <select id="characterSelect" class="w-full p-2 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave">
+          <option value="none">Selecciona un personaje</option>
+          <option value="lino">🔥 Lino Mapray (+1)</option>
+          <option value="garbanza">🎀 Garbanza (±5)</option>
+          <option value="yudmiry">🌌 Yudmiry (+2)</option>
+          <option value="escrimedes">📜 Escrímedes (-3)</option>
+          <option value="oithar">🌀 Oithar (±8)</option>
+          <option value="epheron">🕯️ Ephëron (-9)</option>
+          <option value="triczy">😈 Triczy (±Caótico)</option>
+        </select>
+        <div id="garbanzaSwitch" class="hidden flex items-center space-x-2">
+          <span>Modo:</span>
+          <label class="switch">
+            <input type="checkbox" id="garbanzaMode">
+            <span class="slider"></span>
+          </label>
+          <span id="garbanzaModeLabel">+5 (Picante)</span>
+        </div>
+        <div id="oitharSwitch" class="hidden flex items-center space-x-2">
+          <span>Modo:</span>
+          <label class="switch">
+            <input type="checkbox" id="oitharMode">
+            <span class="slider"></span>
+          </label>
+          <span id="oitharModeLabel">+8 (Vértigo)</span>
+        </div>
+        <p id="characterDesc" class="p-2 bg-crema-suave text-gris-oscuro rounded-lg"></p>
+      </div>
+      <div class="flex space-x-2">
+        <button id="generarQRBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Generar QR</button>
+      </div>
+      <div id="qrCanvas" class="hidden"></div>
+      <h3 class="text-xl font-semibold mt-4">Maprayés a Texto</h3>
+      <textarea id="inputMaprayes" class="w-full p-3 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave" placeholder="Pega tu código Maprayés aquí..."></textarea>
+      <div class="flex space-x-2">
+        <button id="intercambiarMaprayesBtn" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Intercambiar</button>
+        <button id="limpiarMaprayesBtn" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Limpiar</button>
+      </div>
+      <textarea id="textoOutput" class="w-full p-3 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave" placeholder="Texto traducido..."></textarea>
+    </div>
+    <div id="tablaCodigos" class="hidden flex flex-col space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold">Tabla de Códigos</h2>
+        <button id="regresarDesdeTabla" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Regresar</button>
+      </div>
+      <div class="flex space-x-2 flex-wrap">
+        <button id="tablaLetrasBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Letras</button>
+        <button id="tablaNumerosBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Números</button>
+        <button id="tablaSimbolosBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Símbolos</button>
+        <button id="tablaEmojisBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Emojis</button>
+        <button id="tablaFavoritosBtn" class="px-4 py-2 bg-verde-oliva rounded hover:bg-verde-oliva-hover">Favoritos</button>
+      </div>
+      <input type="text" id="filtroTabla" class="w-full p-3 bg-azul-grisaceo border border-gris-oscuro rounded-lg text-crema-suave" placeholder="Buscar en la tabla...">
+      <div class="overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-azul-grisaceo">
+              <th class="p-2">Carácter</th>
+              <th class="p-2">Código Maprayés</th>
+              <th class="p-2">Favorito</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuerpo"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="guardianes" class="hidden flex flex-col space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold">Guardianes de Maprayés</h2>
+        <button id="regresarDesdeGuardianes" class="px-4 py-2 bg-azul-grisaceo rounded hover:bg-verde-oliva-hover">Regresar</button>
+      </div>
+      <p class="text-sm">Conoce a los Guardianes que custodian el lenguaje de Maprayés, cada uno con su poder único.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">🔥 Lino Mapray</h3>
+          <p class="text-sm italic">El instinto. El origen. La llama que no necesita aprobación.</p>
+          <p class="text-sm mt-2">Lino, felino de pelaje capuchino y alma de león, representa la autenticidad y el impulso puro. Desplaza el lenguaje con decisión, sin filtros ni adornos.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> +1</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">🎀 Garbanza</h3>
+          <p class="text-sm italic">Ternura en desequilibrio. Dama de la contradicción.</p>
+          <p class="text-sm mt-2">Gata cálico de moño rojo, Garbanza cambia entre dulzura y picardía. Su traducción oscila: una caricia o una broma con filo.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> +5 (picante) o -5 (suave)</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">🌌 Yudmiry</h3>
+          <p class="text-sm italic">Dualidad, espejos, umbrales.</p>
+          <p class="text-sm mt-2">Yudmiry abre portales donde otros ven paredes. Simboliza el cruce entre lo real y lo invisible. Su desplazamiento transforma el mensaje con suavidad, pero dejando marcas.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> +2</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">📜 Escrímedes</h3>
+          <p class="text-sm italic">El testigo, el escriba del tiempo.</p>
+          <p class="text-sm mt-2">Habitante de la memoria antigua, corrige con firmeza lo que otros olvidan. Cada letra que toca revive algo que alguna vez se escribió.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> -3</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">🌀 Oithar</h3>
+          <p class="text-sm italic">Espasmo de mente, distorsión lúcida.</p>
+          <p class="text-sm mt-2">Criatura nacida del vértigo entre parálisis y lucidez. Oithar vibra entre lo que fue y lo que podría ser. Sus traducciones tiemblan, como si la lengua misma dudara.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> +8 o -8</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">🕯️ Ephëron</h3>
+          <p class="text-sm italic">El susurro final. El lenguaje que muere y renace.</p>
+          <p class="text-sm mt-2">Ephëron no traduce: purga. Cada desplazamiento arrastra palabras al umbral del olvido. Lo que queda, brilla con una luz melancólica.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> -9</p>
+        </div>
+        <div class="guardian-card">
+          <h3 class="text-xl font-semibold">😈 Triczy</h3>
+          <p class="text-sm italic">Juguetón, impredecible, travieso.</p>
+          <p class="text-sm mt-2">Triczy, criatura indefinida que cambia de forma a voluntad, es el maestro del caos lúdico. Susurra trampas, teje engaños y altera el lenguaje como parte de su juego eterno.</p>
+          <p class="text-sm mt-2"><strong>Desplazamiento:</strong> Caótico (+6, -4, +1, -4, +3, -2)</p>
+        </div>
+      </div>
+    </div>
+    <div id="ayuda" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-azul-grisaceo p-6 rounded-lg max-w-md w-full">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-semibold">Ayuda</h2>
+          <button id="cerrarAyuda" class="text-crema-suave hover:text-verde-oliva">✖</button>
+        </div>
+        <p class="text-sm mb-4">Maprayés es un sistema de codificación único. Aquí tienes algunas instrucciones:</p>
+        <ul class="list-disc list-inside text-sm space-y-2">
+          <li>Usa el <strong>Traductor</strong> para convertir texto a Maprayés y viceversa.</li>
+          <li>Consulta la <strong>Tabla de Códigos</strong> para ver todos los símbolos y agregar favoritos.</li>
+          <li>Conoce a los <strong>Guardianes</strong> que custodian el lenguaje.</li>
+          <li>Genera un código QR en el traductor para compartir tu código Maprayés.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="mt-8 py-4 text-center text-crema-suave">
+    <p>Maprayés © 2025 | Creado por Joke-Fu</p>
+    <p><a href="https://github.com/Joke-Fu/maprayes" target="_blank" class="underline hover:text-verde-oliva">Ver en GitHub</a></p>
+  </footer>
+  <script>
+    const alfabeto = {
+      '(1)1':'A','(1)01':'Á','(1)2':'B','(1)3':'C','(1)4':'D','(1)5':'E','(1)05':'É','(1)6':'F','(1)7':'G','(1)8':'H','(1)9':'I','(1)09':'Í',
+      '(2)1':'J','(2)2':'K','(2)3':'L','(2)4':'M','(2)5':'N','(2)6':'Ñ','(2)7':'O','(2)07':'Ó','(2)8':'P','(2)9':'Q','(3)1':'R','(3)2':'S',
+      '(3)3':'T','(3)4':'U','(3)04':'Ú','(3)5':'V','(3)6':'W','(3)7':'X','(3)8':'Y','(3)9':'Z','(4)1':'?','(4)01':'¿','(4)2':'!','(4)02':'¡',
+      '(4)3':'=','(4)4':',','(4)5':';','(4)6':'"','(4)7':')','(4)07':'(','(4)8':'...','(4)9':'*','(5)1':'+','(5)2':'-','(5)3':'÷','(5)4':'×',
+      '(5)5':'√','(5)6':'_','(5)7':'@','(5)8':'π','(5)9':'$','(6)1':'#','(6)2':"'",'(6)3':'%','(6)4':'^','(6)5':'°','(6)6':'/','(6)06':'\\',
+      '(6)7':'>','(6)07':'<','(6)8':'¢','(6)9':'€','(1)3(1)5#':'0','(3)4(2)5#':'1','(1)4(2)7#':'2','(3)3(3)1#':'3','(1)3(3)4#':'4',
+      '(1)3(1)9#':'5','(3)2(1)5#':'6','(3)2(1)9#':'7','(2)7(1)3#':'8','(2)5(3)4#':'9','(0)0':'.','(7)1':'🙂','(7)2':'🙁','(7)3':'😡',
+      '(7)4':'😦','(7)5':'😂','(7)6':'😭','(7)7':'🐱','(7)8':'👍🏼','(7)9':'👎🏼','(8)1':'❤️','(8)2':'😐','(8)3':'😎','(8)4':'🤔','(8)5':'😊',
+      '(8)6':'🧐','(8)7':'😴','(8)8':'🦕','(8)9':'🥳', '||': ' '
+    };
+    const textoAMaprayes = Object.entries(alfabeto).reduce((acc, [clave, valor]) => { acc[valor.toLowerCase()] = clave; return acc; }, {});
+    const maprayesATexto = Object.fromEntries(Object.entries(alfabeto).map(([k, v]) => [k, v.toLowerCase()]));
+    const guardianInitials = {
+      lino: 'LI', garbanza: 'GA', yudmiry: 'YU', escrimedes: 'ES', oithar: 'OI', epheron: 'EP', triczy: 'TR'
+    };
+    const initialToGuardian = {
+      'LI': 'lino', 'GA': 'garbanza', 'YU': 'yudmiry', 'ES': 'escrimedes', 'OI': 'oithar', 'EP': 'epheron', 'TR': 'triczy'
+    };
+    let categoriaActual = 'letras';
+    let favoritos = JSON.parse(localStorage.getItem('favoritos') || '[]');
+    let mythicTriggered = false;
+
+    function mostrarNotificacion(mensaje, color = 'verde-musgo', guardian = null, isGarbanzaPlus = true, isOitharPlus = true) {
+      const contenedor = document.getElementById('notificaciones');
+      const notif = document.createElement('div');
+      notif.className = `notificacion bg-${color}`;
+      if (guardian) {
+        notif.classList.add(guardian);
+        if (guardian === 'garbanza') notif.classList.add(isGarbanzaPlus ? 'garbanza-picante' : 'garbanza-suave');
+        if (guardian === 'oithar') notif.classList.add(isOitharPlus ? 'oithar-vertigo' : 'oithar-lucidez');
+        notif.style.setProperty('--rand-x', Math.random() * 2 - 1);
+        notif.style.setProperty('--rand-y', Math.random() * 2 - 1);
+      }
+      notif.textContent = mensaje;
+      contenedor.appendChild(notif);
+      setTimeout(() => notif.remove(), 3000);
+    }
+
+    function mostrarSeccion(seccion) {
+      document.getElementById('pantallaPrincipal').classList.add('hidden');
+      document.getElementById('traductor').classList.add('hidden');
+      document.getElementById('tablaCodigos').classList.add('hidden');
+      document.getElementById('guardianes').classList.add('hidden');
+      document.getElementById('ayuda').classList.add('hidden');
+      document.getElementById(seccion).classList.remove('hidden');
+      if (seccion === 'tablaCodigos') mostrarTabla();
+    }
+
+    function limpiarCampos(direccion) {
+      if (direccion === 'texto') {
+        document.getElementById('inputText').value = '';
+        document.getElementById('maprayesOutput').value = '';
+      } else {
+        document.getElementById('inputMaprayes').value = '';
+        document.getElementById('textoOutput').value = '';
+      }
+      document.getElementById('characterSelect').value = 'none';
+      document.getElementById('mythicSection').classList.add('hidden');
+      document.getElementById('characterDesc').textContent = '';
+      document.getElementById('garbanzaSwitch').classList.add('hidden');
+      document.getElementById('oitharSwitch').classList.add('hidden');
+    }
+
+    function traducirAMaprayes(texto) {
+      let resultado = [];
+      let caracteresInvalidos = false;
+      for (let palabra of texto.split(/(?=\s)/)) {
+        let codificada = '';
+        for (let char of palabra.trim()) {
+          const clave = textoAMaprayes[char.toLowerCase()];
+          if (clave) codificada += clave;
+          else {
+            codificada += '?';
+            caracteresInvalidos = true;
+          }
+        }
+        if (codificada) resultado.push(codificada);
+      }
+      if (caracteresInvalidos) mostrarNotificacion('Algunos caracteres no soportados', 'amarillo-mostaza');
+      return resultado.join('||');
+    }
+
+    function traducirATexto(entrada) {
+      const partes = entrada.split(/\|\|/);
+      let resultado = [];
+      let errores = [];
+      let posicion = 0;
+      for (let parte of partes) {
+        let palabra = '';
+        let i = 0;
+        while (i < parte.length) {
+          let match = null;
+          for (let len = 9; len >= 1; len--) {
+            let sub = parte.slice(i, i + len);
+            if (alfabeto[sub]) { match = sub; break; }
+          }
+          if (match) {
+            palabra += alfabeto[match];
+            i += match.length;
+          } else {
+            let invalid = parte.slice(i, Math.min(i + 5, parte.length));
+            errores.push(`Código '${invalid}' no reconocido en posición ${posicion + i}`);
+            palabra += '?';
+            i++;
+          }
+          posicion += match ? match.length : 1;
+        }
+        resultado.push(palabra);
+      }
+      if (errores.length > 0) mostrarNotificacion(`Errores: ${errores.join('; ')}`, 'amarillo-mostaza');
+      return resultado.join(' ').trim();
+    }
+
+    function applyMythicShift(code, character, isGarbanzaPlus = true, isOitharPlus = true, isReverse = false) {
+      const parts = code.split(/\|\|/);
+      let result = [];
+      const alphabet = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+      const accentedVowels = 'ÁÉÍÓÚ';
+      const codeMap = {
+        'A': '(1)1', 'Á': '(1)01', 'B': '(1)2', 'C': '(1)3', 'D': '(1)4', 'E': '(1)5', 'É': '(1)05',
+        'F': '(1)6', 'G': '(1)7', 'H': '(1)8', 'I': '(1)9', 'Í': '(1)09', 'J': '(2)1', 'K': '(2)2',
+        'L': '(2)3', 'M': '(2)4', 'N': '(2)5', 'Ñ': '(2)6', 'O': '(2)7', 'Ó': '(2)07', 'P': '(2)8',
+        'Q': '(2)9', 'R': '(3)1', 'S': '(3)2', 'T': '(3)3', 'U': '(3)4', 'Ú': '(3)04', 'V': '(3)5',
+        'W': '(3)6', 'X': '(3)7', 'Y': '(3)8', 'Z': '(3)9'
+      };
+      const triczyShifts = isReverse ? [-6, 4, -1, 4, -3, 2] : [6, -4, 1, -4, 3, -2];
+
+      for (let part of parts) {
+        let shiftedPart = '';
+        let letterIndex = 0;
+        let i = 0;
+        while (i < part.length) {
+          let match = null;
+          for (let len = 9; len >= 1; len--) {
+            let sub = part.slice(i, i + len).trim();
+            if (alfabeto[sub]) { match = sub; break; }
+          }
+          if (match && alfabeto[match]) {
+            let letter = alfabeto[match].toUpperCase();
+            let shift;
+            if (character === 'triczy') {
+              shift = triczyShifts[letterIndex % triczyShifts.length];
+              letterIndex++;
+            } else {
+              shift = character === 'lino' ? (isReverse ? -1 : 1) :
+                      character === 'garbanza' ? (isReverse ? (isGarbanzaPlus ? -5 : 5) : (isGarbanzaPlus ? 5 : -5)) :
+                      character === 'yudmiry' ? (isReverse ? -2 : 2) :
+                      character === 'escrimedes' ? (isReverse ? 3 : -3) :
+                      character === 'oithar' ? (isReverse ? (isOitharPlus ? -8 : 8) : (isOitharPlus ? 8 : -8)) :
+                      character === 'epheron' ? (isReverse ? 9 : -9) : 0;
+            }
+            if (accentedVowels.includes(letter)) {
+              let index = accentedVowels.indexOf(letter);
+              let newIndex = (index + shift + accentedVowels.length) % accentedVowels.length;
+              let newLetter = accentedVowels[newIndex];
+              shiftedPart += codeMap[newLetter];
+            } else if (alphabet.includes(letter)) {
+              let index = alphabet.indexOf(letter);
+              let newIndex = (index + shift + alphabet.length) % alphabet.length;
+              let newLetter = alphabet[newIndex];
+              shiftedPart += codeMap[newLetter];
+            } else {
+              shiftedPart += match;
+            }
+            i += match.length;
+          } else {
+            shiftedPart += part[i] || '';
+            i++;
+          }
+        }
+        result.push(shiftedPart);
+      }
+      return result.join('||');
+    }
+
+    function intercambiarTextos(inputId, outputId) {
+      const input = document.getElementById(inputId);
+      const output = document.getElementById(outputId);
+      const temp = input.value;
+      input.value = output.value;
+      output.value = temp;
+      if (inputId === 'inputText') {
+        document.getElementById('maprayesOutput').value = traducirAMaprayes(input.value);
+        updateMythicShift();
+      } else {
+        document.getElementById('textoOutput').value = traducirATexto(input.value);
+      }
+    }
+
+    function generarQR() {
+      const texto = document.getElementById('maprayesOutput').value;
+      const maprayes = document.getElementById('inputMaprayes').value;
+      let qrText = texto || maprayes;
+      if (!qrText) {
+        mostrarNotificacion('No hay texto para generar QR', 'amarillo-mostaza');
+        return;
+      }
+      const qrCanvas = document.getElementById('qrCanvas');
+      const character = document.getElementById('characterSelect').value;
+      const isGarbanzaPlus = document.getElementById('garbanzaMode').checked;
+      const isOitharPlus = document.getElementById('oitharMode').checked;
+      let qrPrefix = '';
+      if (character !== 'none') {
+        const initial = guardianInitials[character];
+        qrPrefix = character === 'garbanza' ? `[MYTHIC:${initial}:${isGarbanzaPlus ? '+5' : '-5'}] ` :
+                   character === 'oithar' ? `[MYTHIC:${initial}:${isOitharPlus ? '+8' : '-8'}] ` :
+                   `[MYTHIC:${initial}] `;
+        qrText = qrPrefix + qrText;
+      }
+      qrCanvas.innerHTML = '';
+      qrCanvas.classList.remove('hidden');
+      QRCode.toCanvas(qrText, { width: 200 }, function (error, canvas) {
+        if (error) {
+          mostrarNotificacion('Error al generar QR', 'rojo-apagado');
+          return;
+        }
+        qrCanvas.appendChild(canvas);
+        mostrarNotificacion('Código QR generado', 'verde-musgo');
+      });
+    }
+
+    function toggleFavorito(codigo) {
+      if (favoritos.includes(codigo)) {
+        favoritos = favoritos.filter(f => f !== codigo);
+      } else {
+        favoritos.push(codigo);
+      }
+      localStorage.setItem('favoritos', JSON.stringify(favoritos));
+      mostrarTabla();
+    }
+
+    function mostrarTabla() {
+      const filtro = document.getElementById('filtroTabla').value.toLowerCase();
+      const cuerpo = document.getElementById('tablaCuerpo');
+      let items = [];
+      if (categoriaActual === 'letras') {
+        items = Object.entries(alfabeto).filter(([_, char]) => /^[A-ZÁÉÍÓÚÑ]$/.test(char));
+      } else if (categoriaActual === 'numeros') {
+        items = Object.entries(alfabeto).filter(([_, char]) => /^[0-9]$/.test(char));
+      } else if (categoriaActual === 'simbolos') {
+        items = Object.entries(alfabeto).filter(([_, char]) => !/^[A-ZÁÉÍÓÚÑ0-9]$/.test(char) && !['🙂','🙁','😡','😦','😂','😭','🐱','👍🏼','👎🏼','❤️','😐','😎','🤔','😊','🧐','😴','🦕','🥳'].includes(char));
+      } else if (categoriaActual === 'emojis') {
+        items = Object.entries(alfabeto).filter(([_, char]) => ['🙂','🙁','😡','😦','😂','😭','🐱','👍🏼','👎🏼','❤️','😐','😎','🤔','😊','🧐','😴','🦕','🥳'].includes(char));
+      } else if (categoriaActual === 'favoritos') {
+        items = Object.entries(alfabeto).filter(([codigo]) => favoritos.includes(codigo));
+      }
+      cuerpo.innerHTML = items
+        .filter(([codigo, char]) => char.toString().toLowerCase().includes(filtro) || codigo.toLowerCase().includes(filtro))
+        .map(([codigo, char]) => `
+          <tr class="border-b border-gris-oscuro">
+            <td class="p-2">${char}</td>
+            <td class="p-2">${codigo}</td>
+            <td class="p-2"><span class="estrella ${favoritos.includes(codigo) ? 'favorito' : ''}" data-codigo="${codigo}">🌟</span></td>
+          </tr>
+        `).join('');
+
+      document.querySelectorAll('.estrella').forEach(estrella => {
+        estrella.onclick = function() {
+          const codigo = this.getAttribute('data-codigo');
+          toggleFavorito(codigo);
+        };
+      });
+    }
+
+    function updateMythicShift() {
+      const input = document.getElementById('inputText').value.toLowerCase();
+      let output = traducirAMaprayes(input);
+      const characterSelect = document.getElementById('characterSelect');
+      const garbanzaMode = document.getElementById('garbanzaMode');
+      const oitharMode = document.getElementById('oitharMode');
+      const isGarbanzaPlus = garbanzaMode.checked;
+      const isOitharPlus = oitharMode.checked;
+
+      const activationMessages = {
+        lino: 'Modo Lino Mapray (🔥) activado. El origen toma la palabra.',
+        garbanza: 'Modo Garbanza (🎀) activado. Entre caricia y golpe, el lenguaje se curva.',
+        yudmiry: 'Modo Yudmiry (🌌) activado. Las palabras se espejan, el umbral se abre.',
+        escrimedes: 'Modo Escrímedes (📜) activado. Lo escrito se reescribe, el pasado habla.',
+        oithar: 'Modo Oithar (🌀) activado. La confusión se vuelve código.',
+        epheron: 'Modo Ephëron (🕯️) activado. El lenguaje muere y se renueva.',
+        triczy: 'Modo Triczy (😈) activado. El caos juega, el código danza.'
+      };
+
+      if (input.includes('🔥') || input.includes('lino')) {
+        characterSelect.value = 'lino';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.lino, null, 'lino', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('🎀') || input.includes('garbanza')) {
+        characterSelect.value = 'garbanza';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.garbanza, null, 'garbanza', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('🌌') || input.includes('yudmiry')) {
+        characterSelect.value = 'yudmiry';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.yudmiry, null, 'yudmiry', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('📜') || input.includes('escrimedes')) {
+        characterSelect.value = 'escrimedes';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.escrimedes, null, 'escrimedes', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('🌀') || input.includes('oithar')) {
+        characterSelect.value = 'oithar';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.oithar, null, 'oithar', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('🕯️') || input.includes('epheron')) {
+        characterSelect.value = 'epheron';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.epheron, null, 'epheron', isGarbanzaPlus, isOitharPlus);
+      } else if (input.includes('😈') || input.includes('triczy')) {
+        characterSelect.value = 'triczy';
+        document.getElementById('mythicSection').classList.remove('hidden');
+        mostrarNotificacion(activationMessages.triczy, null, 'triczy', isGarbanzaPlus, isOitharPlus);
+      }
+
+      if (characterSelect.value !== 'none') {
+        output = applyMythicShift(output, characterSelect.value, isGarbanzaPlus, isOitharPlus);
+      }
+      document.getElementById('maprayesOutput').value = output;
+    }
+
+    document.getElementById('btnTraductor').onclick = function() { mostrarSeccion('traductor'); };
+    document.getElementById('btnTabla').onclick = function() { mostrarSeccion('tablaCodigos'); };
+    document.getElementById('btnGuardianes').onclick = function() { mostrarSeccion('guardianes'); };
+    document.getElementById('btnAyuda').onclick = function() { mostrarSeccion('ayuda'); };
+    document.getElementById('regresarDesdeTraductor').onclick = function() { mostrarSeccion('pantallaPrincipal'); };
+    document.getElementById('regresarDesdeTabla').onclick = function() { mostrarSeccion('pantallaPrincipal'); };
+    document.getElementById('regresarDesdeGuardianes').onclick = function() { mostrarSeccion('pantallaPrincipal'); };
+    document.getElementById('cerrarAyuda').onclick = function() { mostrarSeccion('pantallaPrincipal'); };
+    document.getElementById('inputText').oninput = updateMythicShift;
+    document.getElementById('inputMaprayes').oninput = function() {
+      let input = this.value;
+      const characterSelect = document.getElementById('characterSelect');
+      const garbanzaMode = document.getElementById('garbanzaMode');
+      const oitharMode = document.getElementById('oitharMode');
+      const isGarbanzaPlus = garbanzaMode.checked;
+      const isOitharPlus = oitharMode.checked;
+      let guardian = characterSelect.value;
+      let cleanedInput = input;
+
+      const mythicMatch = input.match(/\[MYTHIC:([^\]]+)\]\s*/);
+      if (mythicMatch) {
+        const entry = mythicMatch[1].toLowerCase();
+        let name, mode;
+        if (entry.includes(':')) {
+          [name, mode] = entry.split(':');
+        } else {
+          name = entry;
+        }
+        const validGuardians = ['lino', 'garbanza', 'yudmiry', 'escrimedes', 'oithar', 'epheron', 'triczy'];
+        if (name.length === 2 && initialToGuardian[name.toUpperCase()]) {
+          guardian = initialToGuardian[name.toUpperCase()];
+        } else if (validGuardians.includes(name)) {
+          guardian = name;
+        }
+        if (guardian) {
+          characterSelect.value = guardian;
+          if (guardian === 'garbanza' && mode) {
+            garbanzaMode.checked = mode === '+5';
+            document.getElementById('garbanzaModeLabel').textContent = garbanzaMode.checked ? '+5 (Picante)' : '-5 (Suave)';
+          }
+          if (guardian === 'oithar' && mode) {
+            oitharMode.checked = mode === '+8';
+            document.getElementById('oitharModeLabel').textContent = oitharMode.checked ? '+8 (Vértigo)' : '-8 (Lucidez)';
+          }
+          document.getElementById('mythicSection').classList.remove('hidden');
+          document.getElementById('garbanzaSwitch').classList.toggle('hidden', guardian !== 'garbanza');
+          document.getElementById('oitharSwitch').classList.toggle('hidden', guardian !== 'oithar');
+          document.getElementById('characterDesc').textContent = descriptions[guardian] || '';
+          mostrarNotificacion(`Guardián ${guardianInitials[guardian]} detectado desde QR`, null, guardian, garbanzaMode.checked, oitharMode.checked);
+          cleanedInput = input.replace(mythicMatch[0], '');
+        }
+      }
+
+      let output = cleanedInput;
+      if (guardian !== 'none') {
+        output = applyMythicShift(cleanedInput, guardian, isGarbanzaPlus, isOitharPlus, true);
+      }
+      document.getElementById('textoOutput').value = traducirATexto(output);
+    };
+    document.getElementById('intercambiarTextBtn').onclick = function() { intercambiarTextos('inputText', 'maprayesOutput'); };
+    document.getElementById('intercambiarMaprayesBtn').onclick = function() { intercambiarTextos('inputMaprayes', 'textoOutput'); };
+    document.getElementById('limpiarTextBtn').onclick = function() { limpiarCampos('texto'); };
+    document.getElementById('limpiarMaprayesBtn').onclick = function() { limpiarCampos('maprayes'); };
+    document.getElementById('generarQRBtn').onclick = generarQR;
+    document.getElementById('tablaLetrasBtn').onclick = function() { categoriaActual = 'letras'; mostrarTabla(); };
+    document.getElementById('tablaNumerosBtn').onclick = function() { categoriaActual = 'numeros'; mostrarTabla(); };
+    document.getElementById('tablaSimbolosBtn').onclick = function() { categoriaActual = 'simbolos'; mostrarTabla(); };
+    document.getElementById('tablaEmojisBtn').onclick = function() { categoriaActual = 'emojis'; mostrarTabla(); };
+    document.getElementById('tablaFavoritosBtn').onclick = function() { categoriaActual = 'favoritos'; mostrarTabla(); };
+    document.getElementById('filtroTabla').oninput = mostrarTabla;
+
+    [document.getElementById('inputText'), document.getElementById('inputMaprayes')].forEach(input => {
+      input.addEventListener('input', () => {
+        const value = input.value.toLowerCase();
+        const mythicSection = document.getElementById('mythicSection');
+        if (!mythicTriggered && (value.includes('yudmiry') || value.includes('escrimedes') || value.includes('🌌📜🔥🎀😈'))) {
+          mythicTriggered = true;
+          mythicSection.classList.remove('hidden');
+        }
+        if (mythicTriggered) {
+          mythicSection.classList.remove('hidden');
+        }
+      });
+    });
+
+    const characterSelect = document.getElementById('characterSelect');
+    const garbanzaSwitch = document.getElementById('garbanzaSwitch');
+    const garbanzaMode = document.getElementById('garbanzaMode');
+    const garbanzaModeLabel = document.getElementById('garbanzaModeLabel');
+    const oitharSwitch = document.getElementById('oitharSwitch');
+    const oitharMode = document.getElementById('oitharMode');
+    const oitharModeLabel = document.getElementById('oitharModeLabel');
+    const characterDesc = document.getElementById('characterDesc');
+
+    const descriptions = {
+      lino: '🔥 Lino Mapray (+1): El instinto. El origen. La llama que no necesita aprobación.',
+      garbanza: '🎀 Garbanza (±5): Ternura en desequilibrio. Dama de la contradicción.',
+      yudmiry: '🌌 Yudmiry (+2): Dualidad, espejos, umbrales.',
+      escrimedes: '📜 Escrímedes (-3): El testigo, el escriba del tiempo.',
+      oithar: '🌀 Oithar (±8): Espasmo de mente, distorsión lúcida.',
+      epheron: '🕯️ Ephëron (-9): El susurro final. El lenguaje que muere y renace.',
+      triczy: '😈 Triczy (±Caótico): Juguetón, impredecible, travieso.'
+    };
+
+    characterSelect.addEventListener('change', () => {
+      const char = characterSelect.value;
+      characterDesc.textContent = descriptions[char] || '';
+      garbanzaSwitch.classList.toggle('hidden', char !== 'garbanza');
+      oitharSwitch.classList.toggle('hidden', char !== 'oithar');
+      if (char !== 'none') {
+        mostrarNotificacion(`Modo ${guardianInitials[char]} activado`, null, char, garbanzaMode.checked, oitharMode.checked);
+      }
+      updateMythicShift();
+    });
+
+    function updateGarbanzaMode() {
+      const isPlus = garbanzaMode.checked;
+      garbanzaModeLabel.textContent = isPlus ? '+5 (Picante)' : '-5 (Suave)';
+      updateMythicShift();
+    }
+    garbanzaMode.addEventListener('change', updateGarbanzaMode);
+
+    function updateOitharMode() {
+      const isPlus = oitharMode.checked;
+      oitharModeLabel.textContent = isPlus ? '+8 (Vértigo)' : '-8 (Lucidez)';
+      updateMythicShift();
+    }
+    oitharMode.addEventListener('change', updateOitharMode);
+  </script>
+</body>
+</html>
